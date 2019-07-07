@@ -3,41 +3,47 @@
 #include <Windows.h>
 #include <iostream>
 
-#define TRAMPOLINE_OFFSET_CALL 27
+#define TRAMPOLINE_OFFSET_CALL 39
 
-const char TrampolineCode[46] = 
+const char TrampolineCode[61] = 
 {                                    // (implicit "push eip" from call) ; save all registers
-    0x50,                            // push eax
-    0x51,                            // push ecx
-    0x52,                            // push edx
-    0x53,                            // push ebx
-    0x55,                            // push ebp
-    0x56,                            // push esi
     0x57,                            // push edi
+    0x56,                            // push esi
+    0x55,                            // push ebp
+    0x54,                            // push esp                ; esp not accurate yet.
+    0x53,                            // push ebx
+    0x52,                            // push edx
+    0x51,                            // push ecx
+    0x50,                            // push eax
                                     
     0x90,                            // nop
     0x90,                            // nop
     
-    0x8B, 0x44, 0x24, 0x1C,          // mov eax, [esp+0x1C]    ; Adjust pushed eip so it is the original address.
+    0x8B, 0x44, 0x24, 0x20,          // mov eax, [esp+0x20]     ; Adjust pushed eip so it is the original address.
     0x83, 0xE8, 0x05,                // sub eax, 5
-    0x89, 0x44, 0x24, 0x1C,          // mov [esp+0x1C], eax
+    0x89, 0x44, 0x24, 0x20,          // mov [esp+0x20], eax
+    
+    0x8B, 0x44, 0x24, 0x10,          // mov eax, [esp+0x10]     ; Adjust pushed esp so it is the original address.
+    0x83, 0xC0, 0x10,                // add eax, 0x10
+    0x89, 0x44, 0x24, 0x10,          // mov [esp+0x10], eax
     
     0x89, 0xE0,                      // mov eax, esp            ; push ptr to registers
     0x50,                            // push eax
-    0x83, 0xC0, 0x20,                // add eax, 0x20           ; push ptr to stack
+    0x83, 0xC0, 0x24,                // add eax, 0x24           ; push ptr to stack
     0x50,                            // push eax
     0xE8, 0x00, 0x00, 0x00, 0x00,    // call <callback>         ; call callback
 
     0x90,                            // nop
     0x90,                            // nop
 
-    0x5F,                            // pop edi                 ; restore all registers
-    0x5E,                            // pop esi
-    0x5D,                            // pop ebp
-    0x5B,                            // pop ebx
-    0x5A,                            // pop edx
+    0x58,                            // pop eax                 ; restore all registers
     0x59,                            // pop ecx
-    0x58,                            // pop eax
+    0x5A,                            // pop edx
+    0x5B,                            // pop ebx
+    0x83, 0xC4, 0x04,                // add esp, 4              ; pop off esp
+    0x5D,                            // pop ebp
+    0x5E,                            // pop esi
+    0x5F,                            // pop edi                 
 
     0x83, 0xC4, 0x04,                // add esp, 4              ; pop off eip
 

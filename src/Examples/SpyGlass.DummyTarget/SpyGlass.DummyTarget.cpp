@@ -3,12 +3,14 @@
 
 #include <iostream>
 
-void DummyMethod(int a, int b, int c)
+int DummyMethod(int a, int b, int c)
 {
 	std::cout << "This is some dummy method" << std::endl;
 	std::cout << "A: " << std::hex << a << std::endl;
 	std::cout << "B: " << std::hex << b << std::endl;
 	std::cout << "C: " << std::hex << c << std::endl;
+	
+	return a + b + c;
 }
 
 int main()
@@ -19,7 +21,7 @@ int main()
 	{
 		std::cout << "Press enter to run DummyMethod" << std::endl;
 		std::cin.ignore(100, '\n');
-		DummyMethod(0x1337, 0x1338, 0x1339);
+		std::cout << "Result: << " << DummyMethod(0x1337, 0x1338, 0x1339) << std::endl;
 	}
 }
 

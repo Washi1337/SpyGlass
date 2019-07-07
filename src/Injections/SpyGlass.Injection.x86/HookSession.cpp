@@ -14,7 +14,7 @@ void _stdcall HookCallbackBootstrapper(SIZE_T* stack, SIZE_T* registers)
 {
     LOG("--- [Entering hook " << std::hex << registers[REGISTER_EIP] << "] ---");
     LOG("--- [Registers] ---");
-    for (int i = REGISTER_COUNT - 1; i >= 0; i--)
+    for (int i = 0; i < REGISTER_COUNT; i++)
         LOG(std::hex << registers[i]);
 
     HookSessionInstance->HookCallback(stack, registers);

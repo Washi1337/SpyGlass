@@ -12,16 +12,18 @@ struct HookParameters
 	std::vector<int> OffsetsNeedingFixup;
 };
 
-#define REGISTER_COUNT 8
+#define REGISTER_COUNT 10
 
-#define REGISTER_EIP 7
-#define REGISTER_EAX 6
-#define REGISTER_ECX 5
-#define REGISTER_EDX 4
+#define REGISTER_EAX 0
+#define REGISTER_ECX 1
+#define REGISTER_EDX 2
 #define REGISTER_EBX 3
-#define REGISTER_EBP 2
-#define REGISTER_ESI 1
-#define REGISTER_EDI 0
+#define REGISTER_ESP 4
+#define REGISTER_ESP 5
+#define REGISTER_EBP 6
+#define REGISTER_ESI 7
+#define REGISTER_EDI 8
+#define REGISTER_EIP 9
 
 /**
  * Defines the function signature of a hook callback.

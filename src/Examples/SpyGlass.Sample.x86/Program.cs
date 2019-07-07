@@ -15,14 +15,15 @@ namespace SpyGlass.Sample.x86
     {
         private static readonly IList<string> RegisterNames = new[]
         {
+            "eax",
+            "ecx",
+            "edx",
+            "ebx",
+            "esp",
+            "ebp",
             "esi",
             "edi",
-            "ebp",
-            "ebx",
-            "edx",
-            "ecx",
-            "eax",
-            "eip",
+            "eip",    
         };
         
         static void Main(string[] args)
@@ -80,7 +81,7 @@ namespace SpyGlass.Sample.x86
             Console.WriteLine("--- Hook triggered! ---");
             
             Console.WriteLine("[Registers]");
-            for (int i = RegisterNames.Count - 1; i >= 0; i--)
+            for (int i = 0; i < RegisterNames.Count; i++)
                 Console.WriteLine($"{RegisterNames[i]}: {e.Registers[i]:X8}");
             
             Console.WriteLine("Press a key to continue!");
