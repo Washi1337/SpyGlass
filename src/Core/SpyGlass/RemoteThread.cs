@@ -1,4 +1,5 @@
 using System;
+using System.ComponentModel;
 using SpyGlass.Interop;
 
 namespace SpyGlass
@@ -27,6 +28,18 @@ namespace SpyGlass
             get;
         }
 
+        public void Resume()
+        {
+            if (Kernel32.ResumeThread(Handle) == -1)
+                throw new Win32Exception();
+        }
+
+        public void Suspend()
+        {
+            if (Kernel32.SuspendThread(Handle) == -1)
+                throw new Win32Exception();
+        }
+        
         private void ReleaseUnmanagedResources()
         {
             if (Handle != IntPtr.Zero)

@@ -17,40 +17,30 @@ namespace SpyGlass.Sample.x86
 
         static void Main(string[] args)
         {
-            if (args.Length != 1)
+            if (args.Length != 2)
             {
-                Console.WriteLine("Specify base directory.");
+                Console.WriteLine("Usage: Sample.exe host port");
                 return;
             }
+            
+            string host = args[0];
+            int port = int.Parse(args[1]);
+            
+            Console.WriteLine("Connecting to remote thread...");
+            
+            _hookSession = new HookSession(new AsmResolverParametersDetector());
+            _hookSession.MessageReceived += HookSessionOnMessageReceived;
+            _hookSession.MessageSent += HookSessionOnMessageSent;
+            _hookSession.HookTriggered += HookSessionOnHookTriggered;
+            _hookSession.Connect(new IPEndPoint(IPAddress.Parse(host), port));
+            
+            Console.Write("Enter address to hook: ");    
+            var address = new IntPtr(long.Parse(Console.ReadLine(), NumberStyles.HexNumber));
+            
+            _hookSession.Set(address);
 
-            string baseDirectory = args[0].Replace("\"", "");
-            string targetAppPath = Path.Combine(baseDirectory, "SpyGlass.DummyTarget.exe");
-            string dllPath = Path.Combine(baseDirectory, "SpyGlass.Injection.x86.dll");
-
-            int id;
-            using (var process = Process.Start(targetAppPath))
-                id = process.Id;
-
-            using (var remoteProcess = new RemoteProcess(id))
-            {
-                Console.WriteLine("Injecting spyglass...");
-                var injector = new LoadLibraryInjector();
-                injector.InjectDll(remoteProcess, dllPath);
-
-                Console.WriteLine("Connecting to remote thread...");
-                _hookSession = new HookSession(remoteProcess, new AsmResolverParametersDetector());
-                _hookSession.MessageReceived += HookSessionOnMessageReceived;
-                _hookSession.MessageSent += HookSessionOnMessageSent;
-                _hookSession.HookTriggered += HookSessionOnHookTriggered;
-                _hookSession.Connect(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 12345));
-                
-                Console.Write("Enter address to hook: ");    
-                var address = new IntPtr(long.Parse(Console.ReadLine(), NumberStyles.HexNumber));
-                
-                _hookSession.Set(address);
-
-                Console.WriteLine("Hook set!");
-            }
+            Console.WriteLine("Hook set!");
+            
 
             Process.GetCurrentProcess().WaitForExit();
         }

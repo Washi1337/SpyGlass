@@ -27,18 +27,12 @@ namespace SpyGlass.Hooking
         
         public const int Timeout = 10000;
 
-        public HookSession(RemoteProcess process, IHookParametersDetector detector)
+        public HookSession(IHookParametersDetector detector)
         {
             _context = new SynchronizationContext();
-            Process = process;
             Detector = detector;
 
             _socket = new Socket(SocketType.Stream, ProtocolType.Tcp);
-        }
-
-        public RemoteProcess Process
-        {
-            get;
         }
 
         public IHookParametersDetector Detector
@@ -57,7 +51,7 @@ namespace SpyGlass.Hooking
 
         public void Set(IntPtr address)
         {
-            var parameters = Detector.Detect(Process, address);
+            var parameters = Detector.Detect(this, address);
 
             Send(new SetHookMessage(address, parameters.BytesToOverwrite, parameters.Fixups));
             WaitForAcknowledgement();
