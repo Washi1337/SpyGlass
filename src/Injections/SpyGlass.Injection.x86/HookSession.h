@@ -31,6 +31,8 @@ public:
 private:
     void HandleSetHookMessage(SetHookMessage* message);
     void HandleContinueMessage(ContinueMessage* message);
+    void HandleMemoryReadRequest(MemoryReadRequest* message);
+    void HandleMemoryEditRequest(MemoryEditRequest* message);
 
     std::atomic_int _eventCounter;
 

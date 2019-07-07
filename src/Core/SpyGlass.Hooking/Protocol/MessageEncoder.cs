@@ -11,7 +11,10 @@ namespace SpyGlass.Hooking.Protocol
             [1] = typeof(ActionCompletedMessage),
             [2] = typeof(SetHookMessage),
             [3] = typeof(CallbackMessage),
-            [4] = typeof(ContinueMessage)
+            [4] = typeof(ContinueMessage),
+            [5] = typeof(MemoryReadRequest),
+            [6] = typeof(MemoryReadResponse),
+            [7] = typeof(MemoryEditRequest)
         };
 
         private static readonly IDictionary<Type, int> TypeToMessageId = new Dictionary<Type, int>();
@@ -37,7 +40,7 @@ namespace SpyGlass.Hooking.Protocol
                 
                 // update payload length.
                 stream.Position = 0;
-                writer.Write((int) stream.Length - 8);
+                writer.Write((int) stream.Length - 12);
                 
                 return stream.ToArray();
             }

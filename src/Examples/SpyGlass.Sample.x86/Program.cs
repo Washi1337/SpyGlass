@@ -11,21 +11,23 @@ using SpyGlass.Injection;
 
 namespace SpyGlass.Sample.x86
 {
+    public enum RegisterX86
+    {
+        Eax = 0,
+        Ecx = 1,
+        Edx = 2,
+        Ebx = 3,
+        Esp = 4,
+        Ebp = 5,
+        Esi = 6,
+        Edi = 7,
+        Eip = 8
+    }
+    
     class Program
     {
-        private static readonly IList<string> RegisterNames = new[]
-        {
-            "eax",
-            "ecx",
-            "edx",
-            "ebx",
-            "esp",
-            "ebp",
-            "esi",
-            "edi",
-            "eip",    
-        };
-        
+        private static HookSession _hookSession;
+
         static void Main(string[] args)
         {
             if (args.Length != 1)
@@ -49,16 +51,16 @@ namespace SpyGlass.Sample.x86
                 injector.InjectDll(remoteProcess, dllPath);
 
                 Console.WriteLine("Connecting to remote thread...");
-                var hookSession = new HookSession(remoteProcess, new AsmResolverParametersDetector());
-                hookSession.MessageReceived += HookSessionOnMessageReceived;
-                hookSession.MessageSent += HookSessionOnMessageSent;
-                hookSession.HookTriggered += HookSessionOnHookTriggered;
-                hookSession.Connect(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 12345));
+                _hookSession = new HookSession(remoteProcess, new AsmResolverParametersDetector());
+                _hookSession.MessageReceived += HookSessionOnMessageReceived;
+                _hookSession.MessageSent += HookSessionOnMessageSent;
+                _hookSession.HookTriggered += HookSessionOnHookTriggered;
+                _hookSession.Connect(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 12345));
                 
-                Console.Write("Enter address to hook: ");
+                Console.Write("Enter address to hook: ");    
                 var address = new IntPtr(long.Parse(Console.ReadLine(), NumberStyles.HexNumber));
                 
-                hookSession.Set(address);
+                _hookSession.Set(address);
 
                 Console.WriteLine("Hook set!");
             }
@@ -78,10 +80,25 @@ namespace SpyGlass.Sample.x86
 
         private static void HookSessionOnHookTriggered(object sender, HookEventArgs e)
         {
-            Console.WriteLine("--- Hook triggered! ---");
-            Console.WriteLine("eax = " + e.Registers[0].ToString("X8"));
-            Console.WriteLine("Changing eax to 0x12345678");
-            e.Registers[0] = 0x12345678;
+            Console.WriteLine("--- [Hook callback] ---");
+            Console.WriteLine("[Registers]");
+            for (int i = 0; i < 9; i++)
+            {
+                var register = (RegisterX86) i;
+                Console.WriteLine("{0}: {1:X8}", register.ToString().ToLowerInvariant(), e.Registers[i]);
+            }
+            
+            var esp = (IntPtr) e.Registers[(int) RegisterX86.Esp];
+
+            Console.WriteLine("[Stack]");
+            var data = _hookSession.ReadMemory(esp, 4 * sizeof(int));
+            for (int i = 0; i < 4 * sizeof(int); i += sizeof(int))
+                Console.WriteLine($"esp+{i:00}: {BitConverter.ToUInt32(data, i):X8}");
+
+            Console.WriteLine("Changing esp+4 to 0x1234");
+            _hookSession.WriteMemory(esp + 4, BitConverter.GetBytes(0x1234));
+
+            Console.WriteLine("--- [End hook callback] ---");
         }
     }
 }

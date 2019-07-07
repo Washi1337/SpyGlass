@@ -68,6 +68,19 @@ namespace SpyGlass.Hooking
             throw new NotImplementedException();
         }
 
+        public byte[] ReadMemory(IntPtr address, int length)
+        {
+            Send(new MemoryReadRequest(address, length));
+            var response = WaitForResponse<MemoryReadResponse>();
+            return response.Data;
+        }
+
+        public void WriteMemory(IntPtr address, byte[] data)
+        {
+            Send(new MemoryEditRequest(address, data));
+            WaitForAcknowledgement();
+        }
+
         private void Send(Message message)
         {
             int number = Interlocked.Increment(ref _sequenceNumber);

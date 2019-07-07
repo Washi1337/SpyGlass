@@ -2,16 +2,16 @@
 #pragma pack(push, 1)
 
 #include <Windows.h>
-
-#if _DEBUG
 #include <string>
 #include <sstream>
-#endif
 
 #define MESSAGE_ID_ACTION_COMPLETED 1
 #define MESSAGE_ID_SETHOOK 2
 #define MESSAGE_ID_CALLBACK 3
 #define MESSAGE_ID_CONTINUE 4
+#define MESSAGE_ID_MEM_READ_REQUEST 5
+#define MESSAGE_ID_MEM_READ_RESPONSE 6
+#define MESSAGE_ID_MEM_EDIT 7
 
 struct MessageHeader
 {
@@ -34,15 +34,12 @@ struct ActionCompletedMessage
         Metadata = 0;
     }
 
-#if _DEBUG
     std::string ToString()
     {
         std::stringstream result;
         result << "ActionCompleted(Code: " << ErrorCode << ", Metadata: " << Metadata << ")";
         return result.str();
     }
-#endif
-
 };
 
 struct SetHookMessage
@@ -52,15 +49,12 @@ struct SetHookMessage
     UINT32 Count;    
     UINT16 FixupCount;
 
-#if _DEBUG
     std::string ToString()
     {
         std::stringstream result;
         result << "SetHook(Address: " << std::hex << Address << ", Count: " << Count << ", Fixups: " << FixupCount << ")";
         return result.str();
     }
-#endif
-
 };
 
 struct CallBackMessage
@@ -74,17 +68,15 @@ struct CallBackMessage
         Header.PayloadLength = sizeof(CallBackMessage) - sizeof(MessageHeader);
         Header.MessageId = MESSAGE_ID_CALLBACK;
         Id = id;
+        RegisterCount = 0;
     }
 
-#if _DEBUG
     std::string ToString()
     {
         std::stringstream result;
         result << "CallBack(Id: " << Id << ")";
         return result.str();
     }
-#endif
-
 };
 
 struct ContinueMessage
@@ -93,19 +85,55 @@ struct ContinueMessage
     UINT64 Id;
     UINT32 RegisterChangesCount;
 
-#if _DEBUG
     std::string ToString()
     {
         std::stringstream result;
         result << "Continue(Id: " << Id << ", RegisterChanges: " << RegisterChangesCount << ")";
         return result.str();
     }
-#endif
 };
 
-struct RegisterChange {
+struct RegisterChange 
+{
     UINT32 Index;
     UINT64 NewValue;
+};
+
+struct MemoryReadRequest
+{
+    MessageHeader Header;
+    UINT64 Address;
+    UINT32 Length;
+
+    std::string ToString()
+    {
+        std::stringstream result;
+        result << "MemoryRead(Address: " << std::hex << Address << ", Length: " << Length << ")";
+        return result.str();
+    }
+};
+
+struct MemoryReadResponse
+{
+    MessageHeader Header;
+
+    MemoryReadResponse()
+    {
+        Header.MessageId = MESSAGE_ID_MEM_READ_RESPONSE;
+    }
+};
+
+struct MemoryEditRequest
+{
+    MessageHeader Header;
+    UINT64 Address;
+
+    std::string ToString()
+    {
+        std::stringstream result;
+        result << "MemoryEdit(Address: " << std::hex << Address << ")";
+        return result.str();
+    }
 };
 
 #pragma pack(pop)

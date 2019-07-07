@@ -13,10 +13,6 @@ HookSession* HookSessionInstance;
 void _stdcall HookCallbackBootstrapper(SIZE_T* stack, SIZE_T* registers)
 {
     LOG("--- [Entering hook " << std::hex << registers[REGISTER_EIP] << "] ---");
-    LOG("--- [Registers] ---");
-    for (int i = 0; i < REGISTER_COUNT; i++)
-        LOG(std::hex << registers[i]);
-
     HookSessionInstance->HookCallback(stack, registers);
     LOG("--- [Exiting hook " << std::hex << registers[REGISTER_EIP] << "] ---");
 }
@@ -31,7 +27,7 @@ HookSession::HookSession(int port)
 HookSession::~HookSession()
 {
     for (auto entry : _currentHooks)
-          delete entry.second;
+        delete entry.second;
 }
 
 void HookSession::RunMessageLoop()
@@ -42,9 +38,11 @@ void HookSession::RunMessageLoop()
 
         while (true)
         {
+            // Fetch
             auto message = _currentClient->Receive();
             LOG("Message received (length: " << message->PayloadLength << ", id: " << message->MessageId << ", seq: " << message->SequenceNumber << ")");
 
+            // Dispatch
             switch (message->MessageId)
             {
             case MESSAGE_ID_SETHOOK:
@@ -53,8 +51,14 @@ void HookSession::RunMessageLoop()
             case MESSAGE_ID_CONTINUE:
                 HandleContinueMessage((ContinueMessage*) message);
                 break;
+            case MESSAGE_ID_MEM_READ_REQUEST:
+                HandleMemoryReadRequest((MemoryReadRequest*)message);
+                break;
+            case MESSAGE_ID_MEM_EDIT:
+                HandleMemoryEditRequest((MemoryEditRequest*) message);
+                break;
             default:
-                LOG("Unrecognized id");
+                LOG("Unrecognized message.");
                 break;
             }
 
@@ -96,6 +100,7 @@ void HookSession::HookCallback(SIZE_T* stack, SIZE_T* registers)
         regs[i] = registers[i];
 
     _currentClient->Send(&message->Header);
+    delete response;
 
     LOG("Waiting for continue signal...");
 
@@ -176,12 +181,10 @@ void HookSession::HandleContinueMessage(ContinueMessage* message)
     {
         HookEvent e = _currentEvents[message->Id];
         
+        // Apply requested changes to registers.
         auto changes = (RegisterChange*)((char*) message + sizeof(ContinueMessage));
         for (int i = 0; i < message->RegisterChangesCount; i++)
-        {
-            LOG(" - " << changes[i].Index << " = " << std::hex << changes[i].NewValue);
             e.Registers[changes[i].Index] = changes[i].NewValue & MAXSIZE_T;
-        }
 
         // Signal hook callback to continue.
         if (SetEvent(e.WaitEvent) == 0)
@@ -190,6 +193,37 @@ void HookSession::HandleContinueMessage(ContinueMessage* message)
             response.Metadata = GetLastError();
         }
     }
+
+    // Send result back to master process.
+    response.Header.SequenceNumber = message->Header.SequenceNumber;
+    _currentClient->Send(&response.Header);
+}
+
+void HookSession::HandleMemoryReadRequest(MemoryReadRequest* message)
+{
+    auto rawData = new char[sizeof(MemoryReadResponse) + message->Length];
+    auto response = (MemoryReadResponse*)rawData;
+
+    response->Header.MessageId = MESSAGE_ID_MEM_READ_RESPONSE;
+    response->Header.PayloadLength = message->Length;
+    response->Header.SequenceNumber = message->Header.SequenceNumber;
+
+    memcpy(rawData + sizeof(MemoryReadResponse), (void*)message->Address, message->Length);
+
+    _currentClient->Send(&response->Header);
+    delete rawData;
+}
+
+void HookSession::HandleMemoryEditRequest(MemoryEditRequest* message)
+{
+    auto response = ActionCompletedMessage(0);
+    LOG(message->ToString());
+
+    char* data = (char*) message + sizeof(MemoryEditRequest);
+
+    int length = message->Header.PayloadLength - sizeof(UINT64);
+    LOG(std::dec << length);
+    memcpy((void*) message->Address, data, length);
 
     // Send result back to master process.
     response.Header.SequenceNumber = message->Header.SequenceNumber;

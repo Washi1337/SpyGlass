@@ -2,7 +2,6 @@
 #include "pch.h"
 
 #include "ConnectedClient.h"
-#include <iostream>
 
 ConnectedClient::ConnectedClient(SOCKET clientSocket)
 {
