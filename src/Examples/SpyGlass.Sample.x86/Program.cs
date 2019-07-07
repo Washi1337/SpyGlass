@@ -12,8 +12,13 @@ namespace SpyGlass.Sample.x86
     {
         static void Main(string[] args)
         {
-            const string baseDirectory = "D:\\Washi\\Programming\\C#\\SpyGlass\\src\\Debug\\";
+            if (args.Length != 1)
+            {
+                Console.WriteLine("Specify base directory.");
+                return;
+            }
 
+            string baseDirectory = args[0].Replace("\"", "");
             string targetAppPath = Path.Combine(baseDirectory, "SpyGlass.DummyTarget.exe");
             string dllPath = Path.Combine(baseDirectory, "SpyGlass.Injection.x86.dll");
 

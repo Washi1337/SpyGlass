@@ -1,0 +1,3 @@
+[submodule "src/Dependencies/AsmResolver"]
+	path = src/Dependencies/AsmResolver
+	url = https://github.com/Washi1337/AsmResolver.git
