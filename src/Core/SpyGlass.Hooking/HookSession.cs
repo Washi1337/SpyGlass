@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
@@ -88,8 +89,18 @@ namespace SpyGlass.Hooking
                     case CallbackMessage callback:
                         _context.Post(_ =>
                         {
-                            OnHookTriggered(new HookEventArgs(callback.Registers));
-                            Send(new ContinueMessage(callback.Id));
+                            var oldValues = callback.Registers.ToArray();
+                            var eventArgs = new HookEventArgs(callback.Registers);
+                            OnHookTriggered(eventArgs);
+                            
+                            var continueMessage = new ContinueMessage(callback.Id);
+                            for (int i = 0; i < callback.Registers.Count; i++)
+                            {
+                                if (oldValues[i] != callback.Registers[i])
+                                    continueMessage.RegisterChanges[i] = callback.Registers[i];
+                            }
+
+                            Send(continueMessage);
                             WaitForAcknowledgement();
                         }, null);
                         break;

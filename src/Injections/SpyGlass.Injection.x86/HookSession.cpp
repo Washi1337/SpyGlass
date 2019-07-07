@@ -174,8 +174,16 @@ void HookSession::HandleContinueMessage(ContinueMessage* message)
     }
     else
     {
-        // Signal hook callback to continue.
         HookEvent e = _currentEvents[message->Id];
+        
+        auto changes = (RegisterChange*)((char*) message + sizeof(ContinueMessage));
+        for (int i = 0; i < message->RegisterChangesCount; i++)
+        {
+            LOG(" - " << changes[i].Index << " = " << std::hex << changes[i].NewValue);
+            e.Registers[changes[i].Index] = changes[i].NewValue & MAXSIZE_T;
+        }
+
+        // Signal hook callback to continue.
         if (SetEvent(e.WaitEvent) == 0)
         {
             response.ErrorCode = ERROR_HOOK_EVENT_SIGNAL_FAILED;

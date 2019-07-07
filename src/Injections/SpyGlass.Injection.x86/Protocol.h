@@ -91,15 +91,21 @@ struct ContinueMessage
 {
     MessageHeader Header;
     UINT64 Id;
+    UINT32 RegisterChangesCount;
 
 #if _DEBUG
     std::string ToString()
     {
         std::stringstream result;
-        result << "Continue(Id: " << Id << ")";
+        result << "Continue(Id: " << Id << ", RegisterChanges: " << RegisterChangesCount << ")";
         return result.str();
     }
 #endif
+};
+
+struct RegisterChange {
+    UINT32 Index;
+    UINT64 NewValue;
 };
 
 #pragma pack(pop)

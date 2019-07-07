@@ -79,14 +79,9 @@ namespace SpyGlass.Sample.x86
         private static void HookSessionOnHookTriggered(object sender, HookEventArgs e)
         {
             Console.WriteLine("--- Hook triggered! ---");
-            
-            Console.WriteLine("[Registers]");
-            for (int i = 0; i < RegisterNames.Count; i++)
-                Console.WriteLine($"{RegisterNames[i]}: {e.Registers[i]:X8}");
-            
-            Console.WriteLine("Press a key to continue!");
-            Console.ReadKey();
-            Console.WriteLine("Continuing!");
+            Console.WriteLine("eax = " + e.Registers[0].ToString("X8"));
+            Console.WriteLine("Changing eax to 0x12345678");
+            e.Registers[0] = 0x12345678;
         }
     }
 }
