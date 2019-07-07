@@ -5,16 +5,16 @@
 class ConnectedClient
 {
 public:
-	ConnectedClient(SOCKET clientSocket);
-	~ConnectedClient();
+    ConnectedClient(SOCKET clientSocket);
+    ~ConnectedClient();
 
-	int Send(MessageHeader* message);
-	MessageHeader* Receive();
+    int Send(MessageHeader* message);
+    MessageHeader* Receive();
 
-	void Close();
+    void Close();
 
 private:
-	SOCKET _clientSocket;
+    SOCKET _clientSocket;
 
 };
 

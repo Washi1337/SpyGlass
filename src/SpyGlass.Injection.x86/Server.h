@@ -13,21 +13,21 @@
 class Server
 {
 public:
-	static void InitializeWinSock();
+    static void InitializeWinSock();
 
-	Server();
-	~Server();
+    Server();
+    ~Server();
 
-	void Bind(int port);
-	void Listen();
+    void Bind(int port);
+    void Listen();
 
-	ConnectedClient* Accept();
+    ConnectedClient* Accept();
 
-	void Close();
+    void Close();
 
 private:
 
-	SOCKET _listenSocket = INVALID_SOCKET;
-	struct addrinfo* _addressInfo = NULL;
+    SOCKET _listenSocket = INVALID_SOCKET;
+    struct addrinfo* _addressInfo = NULL;
 };
 
