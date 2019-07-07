@@ -10,7 +10,8 @@ namespace SpyGlass.Hooking.Protocol
         {
             [1] = typeof(ActionCompletedMessage),
             [2] = typeof(SetHookMessage),
-            [3] = typeof(CallbackMessage)
+            [3] = typeof(CallbackMessage),
+            [4] = typeof(ContinueMessage)
         };
 
         private static readonly IDictionary<Type, int> TypeToMessageId = new Dictionary<Type, int>();

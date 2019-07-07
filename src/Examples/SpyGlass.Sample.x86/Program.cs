@@ -45,12 +45,14 @@ namespace SpyGlass.Sample.x86
                 Console.WriteLine("Hook set!");
             }
 
-            Console.ReadKey();
+            Process.GetCurrentProcess().WaitForExit();
         }
 
         private static void HookSessionOnHookTriggered(object sender, HookEventArgs e)
         {
             Console.WriteLine($"Hook at address {e.Address.ToInt64():X8} triggered.");
+            Console.WriteLine("Press a key to continue!");
+            Console.ReadKey();
         }
     }
 }

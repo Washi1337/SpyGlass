@@ -13,7 +13,6 @@
 #define MESSAGE_ID_CALLBACK 3
 #define MESSAGE_ID_CONTINUE 4
 
-
 struct MessageHeader
 {
     int PayloadLength;
@@ -31,6 +30,7 @@ struct ActionCompletedMessage
         Header.PayloadLength = sizeof(ActionCompletedMessage) - sizeof(MessageHeader);
         Header.MessageId = MESSAGE_ID_ACTION_COMPLETED;
         ErrorCode = errorCode;
+        Metadata = 0;
     }
 
 #if _DEBUG

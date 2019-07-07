@@ -51,18 +51,21 @@ namespace SpyGlass.Hooking
         public void Set(IntPtr address)
         {
             var parameters = Detector.Detect(Process, address);
-
-            _socket.Send(MessageEncoder.EncodeMessage(new SetHookMessage(address, parameters.BytesToOverwrite,
-                parameters.Fixups)));
-
-            var message = WaitForResponse<ActionCompletedMessage>();
-            if (message.ErrorCode != HookErrorCode.Success)
-                throw new InvalidOperationException($"Server responded with error code {message.ErrorCode}");
+            Send(new SetHookMessage(address, parameters.BytesToOverwrite, parameters.Fixups));
+            
+            var response = WaitForResponse<ActionCompletedMessage>();
+            if (response.ErrorCode != HookErrorCode.Success)
+                throw new InvalidOperationException($"Server responded with error code {response.ErrorCode}");
         }
 
         public void Unset(IntPtr address)
         {
             throw new NotImplementedException();
+        }
+
+        private void Send(IMessage message)
+        {
+            _socket.Send(MessageEncoder.EncodeMessage(message));
         }
 
         private void ReceiveLoop()
@@ -75,6 +78,7 @@ namespace SpyGlass.Hooking
                 {
                     case CallbackMessage callback:
                         OnHookTriggered(new HookEventArgs(callback.Address));
+                        Send(new ContinueMessage(callback.Id));
                         break;
                     default:
                         _bufferedMessages.Add(message);

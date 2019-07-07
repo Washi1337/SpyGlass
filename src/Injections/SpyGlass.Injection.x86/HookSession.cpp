@@ -10,37 +10,11 @@
 
 HookSession* HookSessionInstance;
 
-const char _registerNames[8][4] =
-{
-    "edi",
-    "esi",
-    "ebp",
-    "ebx",
-    "edx",
-    "ecx",
-    "eax",
-    "eip"
-};
-
 void _stdcall HookCallbackBootstrapper(SIZE_T* stack, SIZE_T* registers)
 {
-#if _DEBUG
-    LOG("---- [Begin Hook Callback] ----");
-
-    LOG("---- [Registers] ----");
-    for (int i = 7; i >= 0; i--)
-        LOG(_registerNames[i] << ": " << std::hex << registers[i]);
-
-    LOG("---- [First 4 stack values] ----");
-    for (int i = 0; i < 4; i++)
-        LOG("esp+" << (i * sizeof(SIZE_T)) << ": " << std::hex << stack[i]);
-#endif
-
+    LOG("--- Entering hook " << std::hex << registers[REGISTER_EIP] << " ---");
     HookSessionInstance->HookCallback(stack, registers);
-
-#if _DEBUG
-    LOG("---- [End Hook Callback] ----");
-#endif
+    LOG("--- Exiting hook " << std::hex << registers[REGISTER_EIP] << " ---");
 }
 
 HookSession::HookSession(int port)
@@ -70,7 +44,10 @@ void HookSession::RunMessageLoop()
             switch (message->MessageId)
             {
             case MESSAGE_ID_SETHOOK:
-                HandleSetHookMessage(message);
+                HandleSetHookMessage((SetHookMessage*) message);
+                break;
+            case MESSAGE_ID_CONTINUE:
+                HandleContinueMessage((ContinueMessage*) message);
                 break;
             }
 
@@ -83,18 +60,53 @@ void HookSession::RunMessageLoop()
 
 void HookSession::HookCallback(SIZE_T* stack, SIZE_T* registers)
 {
-    CallBackMessage message(0, registers[REGISTER_EIP]);
+    HANDLE waitHandle = CreateEvent(NULL, true, false, NULL);
+    if (waitHandle == NULL)
+    {
+        LOG("ERROR creating wait handle! " << GetLastError() << std::endl);
+        return;
+    }
+
+    HookEvent e;
+    e.WaitEvent = waitHandle;
+    e.Stack = stack;
+    e.Registers = registers;
+
+    int id = RegisterEvent(e);
+
+    CallBackMessage message(id, registers[REGISTER_EIP]);
     _currentClient->Send(&message.Header);
+
+    LOG("Waiting for continue signal...");
+
+    if (WaitForSingleObjectEx(waitHandle, INFINITE, false) != 0)
+    {
+        LOG("ERROR wait failed! " << GetLastError() << std::endl);
+        return;
+    }
+
+    DestroyEvent(id);
+    CloseHandle(waitHandle);
 }
 
-void HookSession::HandleSetHookMessage(MessageHeader* message)
+int HookSession::RegisterEvent(HookEvent e)
+{
+    int id = _eventCounter++;
+    _currentEvents[id] = e;
+    return id;
+}
+
+void HookSession::DestroyEvent(int id)
+{
+    _currentEvents.erase(id);
+}
+
+void HookSession::HandleSetHookMessage(SetHookMessage* message)
 {
     auto response = ActionCompletedMessage(0);
-
-    auto setHook = (SetHookMessage*)message;
-    LOG(setHook->ToString());
+    LOG(message->ToString());
     
-    if (_currentHooks.count(setHook->Address) > 0)
+    if (_currentHooks.count(message->Address) > 0)
     {
         response.ErrorCode = ERROR_HOOK_ALREADY_SET;
     }
@@ -103,26 +115,50 @@ void HookSession::HandleSetHookMessage(MessageHeader* message)
         // Get fixups
         UINT16* rawOffsets = (UINT16*)((char*)message + sizeof(SetHookMessage));
         std::vector<int> offsets;
-        for (int i = 0; i < setHook->FixupCount; i++)
+        for (int i = 0; i < message->FixupCount; i++)
             offsets.push_back(rawOffsets[i]);
 
         // Set up hook parameters
         HookParameters parameters;
-        parameters.Address = (void*)setHook->Address;
-        parameters.BytesToOverwrite = setHook->Count;
+        parameters.Address = (void*)message->Address;
+        parameters.BytesToOverwrite = message->Count;
         parameters.OffsetsNeedingFixup = offsets;
 
         // Set hook.
         try
         {
             auto hook = new Hook(parameters, HookCallbackBootstrapper);
-            _currentHooks[setHook->Address] = hook;
+            _currentHooks[message->Address] = hook;
             hook->Set();
         }
         catch (int e)
         {
             response.ErrorCode = ERROR_HOOK_CREATION_FAILED;
             response.Metadata = e;
+        }
+    }
+
+    // Send result back to master process.
+    _currentClient->Send(&response.Header);
+}
+
+void HookSession::HandleContinueMessage(ContinueMessage* message)
+{
+    auto response = ActionCompletedMessage(0);
+    LOG(message->ToString());
+
+    if (_currentEvents.count(message->Id) == 0) 
+    {
+        response.ErrorCode = ERROR_HOOK_EVENT_ID_INVALID;
+    }
+    else
+    {
+        // Signal hook callback to continue.
+        HookEvent e = _currentEvents[message->Id];
+        if (SetEvent(e.WaitEvent) == 0)
+        {
+            response.ErrorCode = ERROR_HOOK_EVENT_SIGNAL_FAILED;
+            response.Metadata = GetLastError();
         }
     }
 
