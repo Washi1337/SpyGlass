@@ -1,9 +1,10 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 
 namespace SpyGlass.Hooking.Protocol
 {
-    public class CallbackMessage : IMessage
+    public class CallbackMessage : Message
     {
         public long Id
         {
@@ -11,22 +12,33 @@ namespace SpyGlass.Hooking.Protocol
             set;
         }
 
-        public IntPtr Address
+        public IList<ulong> Registers
         {
             get;
-            set;
-        }
+        } = new List<ulong>();
         
-        public void ReadFrom(BinaryReader reader)
+        public override void ReadFrom(BinaryReader reader)
         {
             Id = reader.ReadInt64();
-            Address = new IntPtr(reader.ReadInt64());
+            int count = reader.ReadInt32();
+            
+            Registers.Clear();
+
+            for (int i = 0; i < count; i++)
+                Registers.Add(reader.ReadUInt64());
         }
 
-        public void WriteTo(BinaryWriter writer)
+        public override void WriteTo(BinaryWriter writer)
         {
             writer.Write(Id);
-            writer.Write(Address.ToInt64());
+            writer.Write(Registers.Count);
+            foreach (var register in Registers)
+                writer.Write(register);
+        }
+
+        public override string ToString()
+        {
+            return $"Callback(Id: {Id}, Registers: {Registers.Count})";
         }
     }
 }

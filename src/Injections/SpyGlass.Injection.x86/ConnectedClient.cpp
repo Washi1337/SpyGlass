@@ -2,7 +2,7 @@
 #include "pch.h"
 
 #include "ConnectedClient.h"
-
+#include <iostream>
 
 ConnectedClient::ConnectedClient(SOCKET clientSocket)
 {
@@ -11,6 +11,7 @@ ConnectedClient::ConnectedClient(SOCKET clientSocket)
 
 ConnectedClient::~ConnectedClient()
 {
+    Close();
 }
 
 int ConnectedClient::Send(MessageHeader* message)
@@ -33,12 +34,13 @@ MessageHeader* ConnectedClient::Receive()
 
     char* buffer = new char[sizeof(MessageHeader) + payloadLength];
     memcpy(buffer, header, sizeof(MessageHeader));
-
+    
     result = recv(this->_clientSocket, buffer + sizeof(MessageHeader), payloadLength, 0);
     if (result == SOCKET_ERROR)
         throw WSAGetLastError();
 
-    return (MessageHeader*) buffer;
+    auto message = (MessageHeader*)buffer;
+    return message;
 }
 
 void ConnectedClient::Close()

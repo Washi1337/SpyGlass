@@ -2,7 +2,7 @@ using System.IO;
 
 namespace SpyGlass.Hooking.Protocol
 {
-    public class ActionCompletedMessage : IMessage
+    public class ActionCompletedMessage : Message
     {
         public HookErrorCode ErrorCode
         {
@@ -16,13 +16,13 @@ namespace SpyGlass.Hooking.Protocol
             set;
         }
         
-        public void ReadFrom(BinaryReader reader)
+        public override void ReadFrom(BinaryReader reader)
         {
             ErrorCode = (HookErrorCode) reader.ReadUInt32();
             Metadata = reader.ReadUInt32();
         }
 
-        public void WriteTo(BinaryWriter writer)
+        public override void WriteTo(BinaryWriter writer)
         {
             writer.Write((uint) ErrorCode);
             writer.Write((uint) Metadata);
@@ -30,7 +30,7 @@ namespace SpyGlass.Hooking.Protocol
 
         public override string ToString()
         {
-            return $"Completed (code: {ErrorCode}, Metadata: {Metadata})";
+            return $"Completed(code: {ErrorCode}, Metadata: {Metadata})";
         }
     }
 }

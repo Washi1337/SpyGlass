@@ -15,8 +15,9 @@
 
 struct MessageHeader
 {
-    int PayloadLength;
-    int MessageId;
+    UINT32 PayloadLength;
+    UINT32 MessageId;
+    UINT32 SequenceNumber;
 };
 
 struct ActionCompletedMessage
@@ -66,21 +67,20 @@ struct CallBackMessage
 {
     MessageHeader Header;
     UINT64 Id;
-    UINT64 Address;
+    UINT32 RegisterCount;
 
-    CallBackMessage(UINT64 id, UINT64 address)
+    CallBackMessage(UINT64 id)
     {
         Header.PayloadLength = sizeof(CallBackMessage) - sizeof(MessageHeader);
         Header.MessageId = MESSAGE_ID_CALLBACK;
         Id = id;
-        Address = address;
     }
 
 #if _DEBUG
     std::string ToString()
     {
         std::stringstream result;
-        result << "CallBack(Id: " << Id << ", Address: " << std::hex << Address << ")";
+        result << "CallBack(Id: " << Id << ")";
         return result.str();
     }
 #endif

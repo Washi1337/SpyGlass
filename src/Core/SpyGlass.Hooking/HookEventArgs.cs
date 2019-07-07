@@ -1,15 +1,16 @@
 using System;
+using System.Collections.Generic;
 
 namespace SpyGlass.Hooking
 {
     public class HookEventArgs : EventArgs
     {
-        public HookEventArgs(IntPtr address)
+        public HookEventArgs(IList<ulong> registers)
         {
-            Address = address;
+            Registers = registers;
         }
 
-        public IntPtr Address
+        public IList<ulong> Registers
         {
             get;
         }

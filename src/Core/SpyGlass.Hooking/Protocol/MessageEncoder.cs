@@ -22,17 +22,20 @@ namespace SpyGlass.Hooking.Protocol
                 TypeToMessageId[entry.Value] = entry.Key;
         }
 
-        public static byte[] EncodeMessage(IMessage message)
+        public static byte[] EncodeMessage(Message message)
         {
             using (var stream = new MemoryStream())
             using (var writer = new BinaryWriter(stream))
             {
+                // header
                 writer.Write(0); // to-be-replaced
+                writer.Write(TypeToMessageId[message.GetType()]);
+                writer.Write(message.SequenceNumber);
                 
-                int messageId = TypeToMessageId[message.GetType()];
-                writer.Write(messageId);
+                // payload
                 message.WriteTo(writer);
                 
+                // update payload length.
                 stream.Position = 0;
                 writer.Write((int) stream.Length - 8);
                 
@@ -40,16 +43,23 @@ namespace SpyGlass.Hooking.Protocol
             }
         }
 
-        public static IMessage DecodeMessage(byte[] bytes)
+        public static Message DecodeMessage(byte[] bytes)
         {
             using (var stream = new MemoryStream(bytes))
             using (var reader = new BinaryReader(stream))
             {
-                int length = reader.ReadInt32(); // not used
+                // header
+                int length = reader.ReadInt32();
                 int messageId = reader.ReadInt32();
+                int sequenceNumber = reader.ReadInt32();
 
-                var message = (IMessage) Activator.CreateInstance(MessageIdToType[messageId]);
+                // create message
+                var message = (Message) Activator.CreateInstance(MessageIdToType[messageId]);
+                message.SequenceNumber = sequenceNumber;
+                
+                // payload
                 message.ReadFrom(reader);
+                
                 return message;
             }
         }

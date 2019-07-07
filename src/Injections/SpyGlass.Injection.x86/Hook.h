@@ -12,6 +12,8 @@ struct HookParameters
 	std::vector<int> OffsetsNeedingFixup;
 };
 
+#define REGISTER_COUNT 8
+
 #define REGISTER_EIP 7
 #define REGISTER_EAX 6
 #define REGISTER_ECX 5

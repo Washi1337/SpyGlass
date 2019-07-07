@@ -2,7 +2,7 @@ using System.IO;
 
 namespace SpyGlass.Hooking.Protocol
 {
-    public class ContinueMessage : IMessage
+    public class ContinueMessage : Message
     {
         public ContinueMessage(long id)
         {
@@ -15,14 +15,19 @@ namespace SpyGlass.Hooking.Protocol
             set;
         }
         
-        public void ReadFrom(BinaryReader reader)
+        public override void ReadFrom(BinaryReader reader)
         {
             Id = reader.ReadInt64();
         }
 
-        public void WriteTo(BinaryWriter writer)
+        public override void WriteTo(BinaryWriter writer)
         {
             writer.Write(Id);
+        }
+
+        public override string ToString()
+        {
+            return $"Continue({Id})";
         }
     }
 }

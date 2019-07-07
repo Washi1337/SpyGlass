@@ -12,9 +12,13 @@ HookSession* HookSessionInstance;
 
 void _stdcall HookCallbackBootstrapper(SIZE_T* stack, SIZE_T* registers)
 {
-    LOG("--- Entering hook " << std::hex << registers[REGISTER_EIP] << " ---");
+    LOG("--- [Entering hook " << std::hex << registers[REGISTER_EIP] << "] ---");
+    LOG("--- [Registers] ---");
+    for (int i = REGISTER_COUNT - 1; i >= 0; i--)
+        LOG(std::hex << registers[i]);
+
     HookSessionInstance->HookCallback(stack, registers);
-    LOG("--- Exiting hook " << std::hex << registers[REGISTER_EIP] << " ---");
+    LOG("--- [Exiting hook " << std::hex << registers[REGISTER_EIP] << "] ---");
 }
 
 HookSession::HookSession(int port)
@@ -38,8 +42,8 @@ void HookSession::RunMessageLoop()
 
         while (true)
         {
-            MessageHeader* message = _currentClient->Receive();
-            LOG("Message received (length: " << message->PayloadLength << ", id: " << message->MessageId << ")");
+            auto message = _currentClient->Receive();
+            LOG("Message received (length: " << message->PayloadLength << ", id: " << message->MessageId << ", seq: " << message->SequenceNumber << ")");
 
             switch (message->MessageId)
             {
@@ -48,6 +52,9 @@ void HookSession::RunMessageLoop()
                 break;
             case MESSAGE_ID_CONTINUE:
                 HandleContinueMessage((ContinueMessage*) message);
+                break;
+            default:
+                LOG("Unrecognized id");
                 break;
             }
 
@@ -74,8 +81,21 @@ void HookSession::HookCallback(SIZE_T* stack, SIZE_T* registers)
 
     int id = RegisterEvent(e);
 
-    CallBackMessage message(id, registers[REGISTER_EIP]);
-    _currentClient->Send(&message.Header);
+    int size = sizeof(CallBackMessage) + sizeof(UINT64) * REGISTER_COUNT;
+        
+    char* response = new char[size];
+    auto message = (CallBackMessage*) response;
+    auto regs = (UINT64*) (response + sizeof(CallBackMessage));
+
+    message->Header.MessageId = MESSAGE_ID_CALLBACK;
+    message->Header.PayloadLength = size - sizeof(MessageHeader);
+    message->Id = id;
+    message->RegisterCount = REGISTER_COUNT;
+
+    for (int i = 0; i < REGISTER_COUNT; i++)
+        regs[i] = registers[i];
+
+    _currentClient->Send(&message->Header);
 
     LOG("Waiting for continue signal...");
 
@@ -139,6 +159,7 @@ void HookSession::HandleSetHookMessage(SetHookMessage* message)
     }
 
     // Send result back to master process.
+    response.Header.SequenceNumber = message->Header.SequenceNumber;
     _currentClient->Send(&response.Header);
 }
 
@@ -163,5 +184,6 @@ void HookSession::HandleContinueMessage(ContinueMessage* message)
     }
 
     // Send result back to master process.
+    response.Header.SequenceNumber = message->Header.SequenceNumber;
     _currentClient->Send(&response.Header);
 }

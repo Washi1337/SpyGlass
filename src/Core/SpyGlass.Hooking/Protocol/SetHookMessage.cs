@@ -4,7 +4,7 @@ using System.IO;
 
 namespace SpyGlass.Hooking.Protocol
 {
-    public class SetHookMessage : IMessage
+    public class SetHookMessage : Message
     {
         public SetHookMessage(IntPtr address, int count, IEnumerable<ushort> fixups)
         {
@@ -30,7 +30,7 @@ namespace SpyGlass.Hooking.Protocol
             get;
         } = new List<ushort>();
         
-        public void ReadFrom(BinaryReader reader)
+        public override void ReadFrom(BinaryReader reader)
         {
             Address = new IntPtr(reader.ReadInt64());
             Count = reader.ReadInt32();
@@ -42,7 +42,7 @@ namespace SpyGlass.Hooking.Protocol
                 Fixups.Add(reader.ReadUInt16());
         }
 
-        public void WriteTo(BinaryWriter writer)
+        public override void WriteTo(BinaryWriter writer)
         {
             writer.Write(Address.ToInt64());
             writer.Write(Count);
@@ -53,7 +53,7 @@ namespace SpyGlass.Hooking.Protocol
 
         public override string ToString()
         {
-            return $"SetHook(Address: {Address}, Count: {Count})";
+            return $"SetHook(Address: {Address}, Count: {Count}, Fixups: {Fixups.Count})";
         }
     }
 }
