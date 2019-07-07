@@ -41,6 +41,7 @@
     <Compile Include="AsmResolverParametersDetector.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="RegisterX86.cs" />
     <Compile Include="RemoteProcessMemoryReader.cs" />
   </ItemGroup>
   <ItemGroup>

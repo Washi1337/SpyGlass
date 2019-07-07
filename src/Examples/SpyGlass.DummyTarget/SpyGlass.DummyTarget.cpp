@@ -15,13 +15,13 @@ int DummyMethod(int a, int b, int c)
 
 int main()
 {
-	std::cout << "DummyMethod: " << &DummyMethod << std::endl;
+	std::cout << "Address of DummyMethod: " << &DummyMethod << std::endl;
 
 	while (true) 
 	{
-		std::cout << "Press enter to run DummyMethod" << std::endl;
+		std::cout << "Press enter to run DummyMethod(A: 1337, B: 1338, C: 1339)" << std::endl;
 		std::cin.ignore(100, '\n');
-		std::cout << "Result: << " << DummyMethod(0x1337, 0x1338, 0x1339) << std::endl;
+		std::cout << "Result: " << DummyMethod(0x1337, 0x1338, 0x1339) << std::endl;
 	}
 }
 
