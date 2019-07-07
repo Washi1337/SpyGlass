@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using System.Net.Sockets;
@@ -15,9 +17,7 @@ namespace SpyGlass.Hooking
         private readonly byte[] _header = new byte[2 * sizeof(int)];
         private readonly byte[] _buffer = new byte[1024];
         
-        private readonly ManualResetEvent _messageReceived = new ManualResetEvent(false);
-        private readonly object _receiveLock = new object();
-        private IMessage _lastReceivedMessage;
+        private readonly BlockingCollection<IMessage> _bufferedMessages = new BlockingCollection<IMessage>();
         
         public const int Timeout = 5000;
 
@@ -56,7 +56,7 @@ namespace SpyGlass.Hooking
                 parameters.Fixups)));
 
             var message = WaitForResponse<ActionCompletedMessage>();
-            if (message.ErrorCode != 0)
+            if (message.ErrorCode != HookErrorCode.Success)
                 throw new InvalidOperationException($"Server responded with error code {message.ErrorCode}");
         }
 
@@ -67,27 +67,19 @@ namespace SpyGlass.Hooking
 
         private void ReceiveLoop()
         {
-            try
+            while (true)
             {
-                while (true)
-                {
-                    var message = ReceiveNextMessage();
+                var message = ReceiveNextMessage();
 
-                    switch (message)
-                    {
-                        case CallbackMessage callback:
-                            OnHookTriggered(new HookEventArgs(callback.Address));
-                            break;
-                        default:
-                            _lastReceivedMessage = message;
-                            _messageReceived.Set();
-                            break;
-                    }
+                switch (message)
+                {
+                    case CallbackMessage callback:
+                        OnHookTriggered(new HookEventArgs(callback.Address));
+                        break;
+                    default:
+                        _bufferedMessages.Add(message);
+                        break;
                 }
-            }
-            finally
-            {
-                _messageReceived.Reset();
             }
         }
 
@@ -111,17 +103,14 @@ namespace SpyGlass.Hooking
         }
 
         private TMessage WaitForResponse<TMessage>()
-            where TMessage : IMessage 
+            where TMessage : IMessage
         {
-            IMessage message = null;
-            if (!_messageReceived.WaitOne(Timeout))
+            if (!_bufferedMessages.TryTake(out var message, Timeout))
                 throw new InvalidOperationException("Request timed out.");
-
-            message = _lastReceivedMessage;
-            _messageReceived.Reset();
-
+            
             if (message is TMessage m)
                 return m;
+            
             throw new InvalidOperationException(
                 $"Server responded with an unexpected {message.GetType()} message.");
         }

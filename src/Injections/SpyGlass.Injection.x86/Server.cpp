@@ -4,8 +4,6 @@
 #include <winsock2.h>
 #include <ws2tcpip.h>
 
-#define PORT "12345"
-
 void Server::InitializeWinSock()
 {
     WSADATA wsaData;
@@ -14,7 +12,7 @@ void Server::InitializeWinSock()
         throw SERVER_ERROR_WSA_FAILED;
 }
 
-Server::Server()
+Server::Server(int port)
 {
     // Get address info.
     struct addrinfo hints;
@@ -26,7 +24,7 @@ Server::Server()
     hints.ai_flags = AI_PASSIVE;
 
     struct addrinfo* resultInfo = NULL;
-    int result = getaddrinfo(NULL, PORT, &hints, &resultInfo);
+    int result = getaddrinfo(NULL, std::to_string(port).c_str(), &hints, &resultInfo);
     if (result != 0)
         throw SERVER_ERROR_GETADDRINFO_FAILED;
 
@@ -44,9 +42,10 @@ Server::Server()
 
 Server::~Server()
 {
+    Close();
 }
 
-void Server::Bind(int port)
+void Server::Bind()
 {
     int result = bind(this->_listenSocket, this->_addressInfo->ai_addr, (int)this->_addressInfo->ai_addrlen);
     if (result == SOCKET_ERROR)

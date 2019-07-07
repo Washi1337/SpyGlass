@@ -4,7 +4,13 @@ namespace SpyGlass.Hooking.Protocol
 {
     public class ActionCompletedMessage : IMessage
     {
-        public int ErrorCode
+        public HookErrorCode ErrorCode
+        {
+            get;
+            set;
+        }
+
+        public uint Metadata
         {
             get;
             set;
@@ -12,17 +18,19 @@ namespace SpyGlass.Hooking.Protocol
         
         public void ReadFrom(BinaryReader reader)
         {
-            ErrorCode = reader.ReadInt32();
+            ErrorCode = (HookErrorCode) reader.ReadUInt32();
+            Metadata = reader.ReadUInt32();
         }
 
         public void WriteTo(BinaryWriter writer)
         {
-            writer.Write(ErrorCode);
+            writer.Write((uint) ErrorCode);
+            writer.Write((uint) Metadata);
         }
 
         public override string ToString()
         {
-            return $"Completed (code: {ErrorCode})";
+            return $"Completed (code: {ErrorCode}, Metadata: {Metadata})";
         }
     }
 }

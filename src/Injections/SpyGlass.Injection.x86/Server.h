@@ -15,10 +15,10 @@ class Server
 public:
     static void InitializeWinSock();
 
-    Server();
+    Server(int port);
     ~Server();
 
-    void Bind(int port);
+    void Bind();
     void Listen();
 
     ConnectedClient* Accept();

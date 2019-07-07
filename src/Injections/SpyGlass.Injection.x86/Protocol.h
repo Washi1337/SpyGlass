@@ -24,6 +24,7 @@ struct ActionCompletedMessage
 {
     MessageHeader Header;
     UINT32 ErrorCode;
+    UINT32 Metadata;
 
     ActionCompletedMessage(UINT32 errorCode)
     {
@@ -36,7 +37,7 @@ struct ActionCompletedMessage
     std::string ToString()
     {
         std::stringstream result;
-        result << "ActionCompleted(Code: " << ErrorCode << ")";
+        result << "ActionCompleted(Code: " << ErrorCode << ", Metadata: " << Metadata << ")";
         return result.str();
     }
 #endif
