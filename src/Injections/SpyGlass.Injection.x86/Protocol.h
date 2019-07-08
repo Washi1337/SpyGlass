@@ -5,13 +5,15 @@
 #include <string>
 #include <sstream>
 
-#define MESSAGE_ID_ACTION_COMPLETED 1
-#define MESSAGE_ID_SETHOOK 2
-#define MESSAGE_ID_CALLBACK 3
-#define MESSAGE_ID_CONTINUE 4
-#define MESSAGE_ID_MEM_READ_REQUEST 5
-#define MESSAGE_ID_MEM_READ_RESPONSE 6
-#define MESSAGE_ID_MEM_EDIT 7
+#define MESSAGE_ID_ACTION_COMPLETED         1
+#define MESSAGE_ID_SETHOOK                  2
+#define MESSAGE_ID_CALLBACK                 3
+#define MESSAGE_ID_CONTINUE                 4
+#define MESSAGE_ID_MEM_READ_REQUEST         5
+#define MESSAGE_ID_MEM_READ_RESPONSE        6
+#define MESSAGE_ID_MEM_EDIT                 7
+#define MESSAGE_ID_PROC_ADDRESS_REQUEST     8
+#define MESSAGE_ID_PROC_ADDRESS_RESPONSE    9
 
 struct MessageHeader
 {
@@ -133,6 +135,33 @@ struct MemoryEditRequest
         std::stringstream result;
         result << "MemoryEdit(Address: " << std::hex << Address << ")";
         return result.str();
+    }
+};
+
+struct ProcAddressRequest
+{
+    MessageHeader Header;
+    UINT16 LibraryNameLength;
+    UINT16 ProcedureNameLength;
+
+    std::string ToString()
+    {
+        std::stringstream result;
+        result << "GetProcAddress(Library: " << std::dec << LibraryNameLength << ", Procedure: " << ProcedureNameLength << ")";
+        return result.str();
+    }
+};
+
+struct ProcAddressResponse
+{
+    MessageHeader Header;
+    UINT64 Address;
+
+    ProcAddressResponse(UINT64 address)
+    {
+        Header.PayloadLength = sizeof(ProcAddressResponse) - sizeof(MessageHeader);
+        Header.MessageId = MESSAGE_ID_PROC_ADDRESS_RESPONSE;
+        Address = address;
     }
 };
 

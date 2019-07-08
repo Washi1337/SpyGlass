@@ -44,15 +44,15 @@
     <Compile Include="RegisterX86.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\Core\SpyGlass.Hooking\SpyGlass.Hooking.csproj">
+    <ProjectReference Include="..\..\..\Core\SpyGlass.Hooking\SpyGlass.Hooking.csproj">
       <Project>{66404987-0b8e-491f-a3f9-dc0d8ca1f324}</Project>
       <Name>SpyGlass.Hooking</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\Core\SpyGlass\SpyGlass.csproj">
+    <ProjectReference Include="..\..\..\Core\SpyGlass\SpyGlass.csproj">
       <Project>{3b3885eb-0e45-4eb6-be94-b23c66ae02f5}</Project>
       <Name>SpyGlass</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\Dependencies\AsmResolver\AsmResolver\AsmResolver.csproj">
+    <ProjectReference Include="..\..\..\Dependencies\AsmResolver\AsmResolver\AsmResolver.csproj">
       <Project>{228b5994-1035-4eb0-a095-8d85b6ee1146}</Project>
       <Name>AsmResolver</Name>
     </ProjectReference>

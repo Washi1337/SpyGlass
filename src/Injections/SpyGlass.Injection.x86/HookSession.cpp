@@ -57,6 +57,9 @@ void HookSession::RunMessageLoop()
             case MESSAGE_ID_MEM_EDIT:
                 HandleMemoryEditRequest((MemoryEditRequest*) message);
                 break;
+            case MESSAGE_ID_PROC_ADDRESS_REQUEST:
+                HandleProcAddressRequest((ProcAddressRequest*)message);
+                break;
             default:
                 LOG("Unrecognized message.");
                 break;
@@ -226,6 +229,36 @@ void HookSession::HandleMemoryEditRequest(MemoryEditRequest* message)
     memcpy((void*) message->Address, data, length);
 
     // Send result back to master process.
+    response.Header.SequenceNumber = message->Header.SequenceNumber;
+    _currentClient->Send(&response.Header);
+}
+
+void HookSession::HandleProcAddressRequest(ProcAddressRequest* message)
+{
+    LOG(message->ToString());
+
+    auto raw = (char*) message + sizeof(ProcAddressRequest);
+
+    // Read raw names.
+    auto library = new char[message->LibraryNameLength + 1];
+    auto procedure = new char[message->ProcedureNameLength + 1];
+    memset(library, 0, message->LibraryNameLength + 1);
+    memset(procedure, 0, message->ProcedureNameLength + 1);
+    memcpy(library, raw, message->LibraryNameLength);
+    memcpy(procedure, raw + message->LibraryNameLength, message->ProcedureNameLength);
+    
+    // Get requested address.
+    auto moduleHandle = GetModuleHandleA(library);
+    auto procAddress = GetProcAddress(moduleHandle, procedure);
+
+    LOG(std::hex << procAddress);
+
+    // Clear up buffers.
+    delete library;
+    delete procedure;
+
+    // Send response.
+    auto response = ProcAddressResponse((UINT64) procAddress);
     response.Header.SequenceNumber = message->Header.SequenceNumber;
     _currentClient->Send(&response.Header);
 }

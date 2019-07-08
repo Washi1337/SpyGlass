@@ -75,6 +75,13 @@ namespace SpyGlass.Hooking
             WaitForAcknowledgement();
         }
 
+        public IntPtr GetProcAddress(string moduleName, string procedureName)
+        {
+            Send(new ProcAddressRequest(moduleName, procedureName));
+            var response = WaitForResponse<ProcAddressResponse>();
+            return response.Address;
+        }
+
         private void Send(Message message)
         {
             int number = Interlocked.Increment(ref _sequenceNumber);

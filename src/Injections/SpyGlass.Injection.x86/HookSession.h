@@ -33,6 +33,7 @@ private:
     void HandleContinueMessage(ContinueMessage* message);
     void HandleMemoryReadRequest(MemoryReadRequest* message);
     void HandleMemoryEditRequest(MemoryEditRequest* message);
+    void HandleProcAddressRequest(ProcAddressRequest* message);
 
     std::atomic_int _eventCounter;
 

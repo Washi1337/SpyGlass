@@ -14,7 +14,9 @@ namespace SpyGlass.Hooking.Protocol
             [4] = typeof(ContinueMessage),
             [5] = typeof(MemoryReadRequest),
             [6] = typeof(MemoryReadResponse),
-            [7] = typeof(MemoryEditRequest)
+            [7] = typeof(MemoryEditRequest),
+            [8] = typeof(ProcAddressRequest),
+            [9] = typeof(ProcAddressResponse),
         };
 
         private static readonly IDictionary<Type, int> TypeToMessageId = new Dictionary<Type, int>();
