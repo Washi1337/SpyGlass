@@ -4,30 +4,53 @@ SpyGlass
 SpyGlass is a hooking library that allows for hooking inside remote processes. The API is an event driven framework, allowing .NET developers easily inspect and alter the behaviour of the target process without having to write lots of code.
 
 Features
---------
+========
 - Hook anywhere in any process, even if the process is running on a different (virtual) machine.
     - Useful if the target application is malware and needs to be isolated from anything else.
 - View and edit register values in the callback.
 - View and edit memory in the callback.
-
+- Various convenience methods, such as:
+    - Getting the address of a procedure in a remote process.
 
 Showcase
---------
+========
+
+Inspecting the arguments of a MessageBoxA call
+----------------------------------------------
+
+![Left: Master, Right: Slave](doc/img/screenshot2.png)
+
+The image above showcases a simple hooking application (on the right) that monitors a remote process running inside a virtual machine (on the left) that calls `MessageBoxA` at some point. We can use SpyGlass to hook this function remotely, and inspect the arguments. 
+
+- Check out the [source code](src/Examples/MessageBox).
+- To reproduce, run the following command in the VM:
+    ```
+    SpyGlass.Bootstrapper.x86.exe SpyGlass.Injection.x86.dll MessageBoxTest.exe
+    ```
+    And on the master machine, run:
+    ```
+    MessageBoxHook.exe <ip-address> 12345
+    ```
+
+Changing stack values on the fly
+--------------------------------
 
 ![Left: Master, Right: Slave](doc/img/screenshot1.png)
 
-The image above showcases a simple hooking application (on the right) that monitors a remote process running inside a virtual machine (on the left). The function `DummyMethod` in the slave process takes three arguments, and simply adds them together. This function is originally called with three arguments: `0x1337`, `0x1338` and `0x1339`. However, the master process hooked this function, and modified the first parameter from `0x1337` to `0x1234` in the callback.
+In this case, the function `DummyMethod` in the slave process takes three arguments, and simply adds them together. This function is originally called with three arguments: `0x1337`, `0x1338` and `0x1339`. However, the master process hooked this function, and modified the first parameter from `0x1337` to `0x1234` in the callback.
 
-The examples [here](src/Examples/DummyExample) contain the dummy application, as well as the master process and the bootstrapper. To reproduce, run the following command in the VM:
+- Check out the [source code](src/Examples/DummyExample).
+- To reproduce, run the following command in the VM:
+    ```
+    SpyGlass.Bootstrapper.x86.exe SpyGlass.Injection.x86.dll SpyGlass.DummyTarget.exe
+    ```
+    And on the master machine, run:
+    ```
+    SpyGlass.Sample.x86.exe <ip-address> 12345
+    ```
 
-```
-SpyGlass.Bootstrapper.x86.exe SpyGlass.Injection.x86.dll SpyGlass.DummyTarget.exe
-```
-
-And on the master machine, run:
-```
-SpyGlass.Sample.x86.exe <ip-address> 12345
-```
+FAQ
+===
 
 How do I write my own hooks?
 ----------------------------

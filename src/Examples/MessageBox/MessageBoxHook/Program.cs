@@ -48,7 +48,7 @@ namespace MessageBoxHook
 
         private static void HookSessionOnHookTriggered(object sender, HookEventArgs e)
         {
-            Console.WriteLine("MessageBoxA called.");
+            Console.WriteLine("MessageBoxA was called!");
 
             var esp = (IntPtr) e.Registers[(int) RegisterX86.Esp];
             var rawStackData = _hookSession.ReadMemory(esp, 5 * sizeof(uint));
@@ -57,14 +57,14 @@ namespace MessageBoxHook
             for (int i = 0; i < stackEntries.Length; i ++)
                 stackEntries[i] = BitConverter.ToUInt32(rawStackData, i*sizeof(int));
 
-            Console.WriteLine("Handle: " + stackEntries[1].ToString("X8"));
-
             var message = BytesToZeroTerminatedString(_hookSession.ReadMemory((IntPtr) stackEntries[2], 100));
-            Console.WriteLine("Message: " + message);
             var title = BytesToZeroTerminatedString(_hookSession.ReadMemory((IntPtr) stackEntries[3], 100));
-            Console.WriteLine("Title: " + title);
-
-            Console.WriteLine("Style: " + stackEntries[4].ToString("X8"));
+            
+            Console.WriteLine("Arguments:");
+            Console.WriteLine($"- hWnd: {stackEntries[1]:X8}");
+            Console.WriteLine($"- lpText: \"{message}\"");
+            Console.WriteLine($"- lpCaption: \"{title}\"");
+            Console.WriteLine($"- uType: {stackEntries[4]:X8}");
         }
     }
 }
