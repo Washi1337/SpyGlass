@@ -11,13 +11,27 @@ Features
 - View and edit memory in the callback.
 
 
-Example
+Showcase
 --------
 
 ![Left: Master, Right: Slave](doc/img/screenshot1.png)
 
-Quick starters guide can be found [here](doc/QuickStart.md).
+The image above showcases a simple hooking application (on the right) that monitors a remote process running inside a virtual machine (on the left). The function `DummyMethod` in the slave process takes three arguments, and simply adds them together. This function is originally called with three arguments: `0x1337`, `0x1338` and `0x1339`. However, the master process hooked this function, and modified the first parameter from `0x1337` to `0x1234` in the callback.
 
+The examples [here](src/Examples) contain the dummy application, as well as the master process and the bootstrapper. To reproduce, run the following command in the VM:
+
+```
+SpyGlass.Bootstrapper.x86.exe SpyGlass.Injection.x86.dll SpyGlass.DummyTarget.exe
+```
+
+And on the master machine, run:
+```
+SpyGlass.Sample.x86.exe <ip-address> 12345
+```
+
+How do I write my own hooks?
+----------------------------
+To write your own master process and/or bootstrapper, see the [quick starters guide](doc/QuickStart.md).
 
 How does it work?
 -----------------
