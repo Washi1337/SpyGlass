@@ -13,6 +13,8 @@ struct HookEvent
 
 #define ERROR_HOOK_CREATION_FAILED      0x00000001
 #define ERROR_HOOK_ALREADY_SET          0x00000002
+#define ERROR_HOOK_NOT_SET              0x00000003
+#define ERROR_HOOK_UNSET_FAILED         0x00000004         
 
 #define ERROR_HOOK_EVENT_ID_INVALID     0x00000010
 #define ERROR_HOOK_EVENT_SIGNAL_FAILED  0x00000011
@@ -30,6 +32,7 @@ public:
 
 private:
     void HandleSetHookMessage(SetHookMessage* message);
+    void HandleUnsetHookMessage(UnsetHookMessage* message);
     void HandleContinueMessage(ContinueMessage* message);
     void HandleMemoryReadRequest(MemoryReadRequest* message);
     void HandleMemoryEditRequest(MemoryEditRequest* message);

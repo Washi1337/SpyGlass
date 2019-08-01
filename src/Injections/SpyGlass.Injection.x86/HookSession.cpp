@@ -48,6 +48,9 @@ void HookSession::RunMessageLoop()
             case MESSAGE_ID_SETHOOK:
                 HandleSetHookMessage((SetHookMessage*) message);
                 break;
+            case MESSAGE_ID_UNSETHOOK:
+                HandleUnsetHookMessage((UnsetHookMessage*) message);
+                break;
             case MESSAGE_ID_CONTINUE:
                 HandleContinueMessage((ContinueMessage*) message);
                 break;
@@ -166,6 +169,37 @@ void HookSession::HandleSetHookMessage(SetHookMessage* message)
         }
     }
 
+    // Send result back to master process.
+    response.Header.SequenceNumber = message->Header.SequenceNumber;
+    _currentClient->Send(&response.Header);
+}
+
+void HookSession::HandleUnsetHookMessage(UnsetHookMessage* message)
+{
+    auto response = ActionCompletedMessage(0);
+    LOG(message->ToString());
+
+    if (_currentHooks.count(message->Address) == 0)
+    {
+        // No hook was set on this address.
+        response.ErrorCode = ERROR_HOOK_NOT_SET;
+    }
+    else 
+    {
+        try
+        {
+            // Unset hook and remove.
+            auto hook = _currentHooks[message->Address];
+            hook->Unset();
+            _currentHooks.erase(message->Address);
+        } 
+        catch (int e)
+        {
+            response.ErrorCode = ERROR_HOOK_UNSET_FAILED;
+            response.Metadata = e;
+        }
+    }    
+    
     // Send result back to master process.
     response.Header.SequenceNumber = message->Header.SequenceNumber;
     _currentClient->Send(&response.Header);

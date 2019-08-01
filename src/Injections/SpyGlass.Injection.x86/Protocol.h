@@ -7,13 +7,14 @@
 
 #define MESSAGE_ID_ACTION_COMPLETED         1
 #define MESSAGE_ID_SETHOOK                  2
-#define MESSAGE_ID_CALLBACK                 3
-#define MESSAGE_ID_CONTINUE                 4
-#define MESSAGE_ID_MEM_READ_REQUEST         5
-#define MESSAGE_ID_MEM_READ_RESPONSE        6
-#define MESSAGE_ID_MEM_EDIT                 7
-#define MESSAGE_ID_PROC_ADDRESS_REQUEST     8
-#define MESSAGE_ID_PROC_ADDRESS_RESPONSE    9
+#define MESSAGE_ID_UNSETHOOK                3
+#define MESSAGE_ID_CALLBACK                 4
+#define MESSAGE_ID_CONTINUE                 5
+#define MESSAGE_ID_MEM_READ_REQUEST         6
+#define MESSAGE_ID_MEM_READ_RESPONSE        7
+#define MESSAGE_ID_MEM_EDIT                 8
+#define MESSAGE_ID_PROC_ADDRESS_REQUEST     9
+#define MESSAGE_ID_PROC_ADDRESS_RESPONSE    10
 
 struct MessageHeader
 {
@@ -55,6 +56,19 @@ struct SetHookMessage
     {
         std::stringstream result;
         result << "SetHook(Address: " << std::hex << Address << ", Count: " << Count << ", Fixups: " << FixupCount << ")";
+        return result.str();
+    }
+};
+
+struct UnsetHookMessage
+{
+    MessageHeader Header;
+    UINT64 Address;
+    
+    std::string ToString()
+    {
+        std::stringstream result;
+        result << "UnsetHook(Address: " << std::hex << Address << ")";
         return result.str();
     }
 };

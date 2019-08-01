@@ -10,13 +10,14 @@ namespace SpyGlass.Hooking.Protocol
         {
             [1] = typeof(ActionCompletedMessage),
             [2] = typeof(SetHookMessage),
-            [3] = typeof(CallbackMessage),
-            [4] = typeof(ContinueMessage),
-            [5] = typeof(MemoryReadRequest),
-            [6] = typeof(MemoryReadResponse),
-            [7] = typeof(MemoryEditRequest),
-            [8] = typeof(ProcAddressRequest),
-            [9] = typeof(ProcAddressResponse),
+            [3] = typeof(UnsetHookMessage),
+            [4] = typeof(CallbackMessage),
+            [5] = typeof(ContinueMessage),
+            [6] = typeof(MemoryReadRequest),
+            [7] = typeof(MemoryReadResponse),
+            [8] = typeof(MemoryEditRequest),
+            [9] = typeof(ProcAddressRequest),
+            [10] = typeof(ProcAddressResponse),
         };
 
         private static readonly IDictionary<Type, int> TypeToMessageId = new Dictionary<Type, int>();

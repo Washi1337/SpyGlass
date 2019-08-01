@@ -59,7 +59,8 @@ namespace SpyGlass.Hooking
 
         public void Unset(IntPtr address)
         {
-            throw new NotImplementedException();
+            Send(new UnsetHookMessage(address));
+            WaitForAcknowledgement();
         }
 
         public byte[] ReadMemory(IntPtr address, int length)
